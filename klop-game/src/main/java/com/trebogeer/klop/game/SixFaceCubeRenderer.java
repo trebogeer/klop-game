@@ -5,8 +5,11 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.AudioManager;
+import android.media.SoundPool;
 import android.opengl.GLSurfaceView;
 import android.opengl.GLU;
+import android.os.Vibrator;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -32,7 +35,7 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
     private long lastUpdate = -1;
     private float x, y, zz;
     private float last_x, last_y, last_z;
-    private static final int SHAKE_THRESHOLD = 800;
+    private static final int SHAKE_THRESHOLD = 400;
 
 
     /* Rotation values */
@@ -46,7 +49,7 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
     private float z = -5.0f;            //Depth Into The Screen
 
     private int filter = 0;                //Which texture filter?
-    
+
     private AtomicBoolean isRunning = new AtomicBoolean(false);
 
     /**
@@ -57,6 +60,8 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
      * Is blending enabled ( NEW )
      */
     private boolean blend = false;
+
+    private SoundPool soundPool;
 
     /* The initial light values */
     private float[] lightAmbient = {0.5f, 0.5f, 0.5f, 1.0f};
@@ -72,6 +77,8 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
     private float oldX;
     private float oldY;
     private final float TOUCH_SCALE = 0.2f;            //Proved to be good for normal rotation
+
+    private int soundId;
 
     /**
      * The Activity Context
@@ -108,7 +115,7 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
         lightPositionBuffer.put(lightPosition);
         lightPositionBuffer.position(0);
 
-       // this.cube = new SixFacesCube(context);
+        // this.cube = new SixFacesCube(context);
         this.cube = new CubeA();
 
         sensorMgr = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
@@ -118,6 +125,30 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
             sensorMgr.unregisterListener(this);
         }
 
+        soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
+        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                float volume = getVolume();
+                // Is the sound loaded already?
+                // if (loaded) {
+                soundPool.play(sampleId, volume, volume, 1, 0, 1f);
+                //  Log.e("Test", "Played sound");
+                //}
+            }
+        });
+        this.soundId = soundPool.load(context, R.raw.soft_airy_swish, 1);
+
+
+    }
+
+    private float getVolume() {
+        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        float actualVolume = (float) audioManager
+                .getStreamVolume(AudioManager.STREAM_MUSIC);
+        float maxVolume = (float) audioManager
+                .getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        return actualVolume / maxVolume;
     }
 
     // Call back when the surface is first created or re-created.
@@ -125,29 +156,29 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         Log.i("klop#onSurfaceCreated", "Enterd method");
         //And there'll be light!
-        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_AMBIENT, lightAmbientBuffer);		//Setup The Ambient Light
-        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, lightDiffuseBuffer);		//Setup The Diffuse Light
-        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, lightPositionBuffer);	//Position The Light
-        gl.glEnable(GL10.GL_LIGHT0);											//Enable Light 0
+        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_AMBIENT, lightAmbientBuffer);        //Setup The Ambient Light
+        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, lightDiffuseBuffer);        //Setup The Diffuse Light
+        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, lightPositionBuffer);    //Position The Light
+        gl.glEnable(GL10.GL_LIGHT0);                                            //Enable Light 0
 
         //Blending
-        gl.glColor4f(1.0f, 1.0f, 1.0f, 0.5f);				//Full Brightness. 50% Alpha ( NEW )
-        gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE);		//Set The Blending Function For Translucency ( NEW )
+        gl.glColor4f(1.0f, 1.0f, 1.0f, 0.5f);                //Full Brightness. 50% Alpha ( NEW )
+        gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE);        //Set The Blending Function For Translucency ( NEW )
 
         //Settings
-        gl.glDisable(GL10.GL_DITHER);				//Disable dithering
-        gl.glEnable(GL10.GL_TEXTURE_2D);			//Enable Texture Mapping
-        gl.glShadeModel(GL10.GL_SMOOTH); 			//Enable Smooth Shading
-        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f); 	//Black Background
-        gl.glClearDepthf(1.0f); 					//Depth Buffer Setup
-        gl.glEnable(GL10.GL_DEPTH_TEST); 			//Enables Depth Testing
-        gl.glDepthFunc(GL10.GL_LEQUAL); 			//The Type Of Depth Testing To Do
+        gl.glDisable(GL10.GL_DITHER);                //Disable dithering
+        gl.glEnable(GL10.GL_TEXTURE_2D);            //Enable Texture Mapping
+        gl.glShadeModel(GL10.GL_SMOOTH);             //Enable Smooth Shading
+        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f);     //Black Background
+        gl.glClearDepthf(1.0f);                     //Depth Buffer Setup
+        gl.glEnable(GL10.GL_DEPTH_TEST);             //Enables Depth Testing
+        gl.glDepthFunc(GL10.GL_LEQUAL);             //The Type Of Depth Testing To Do
 
         //Really Nice Perspective Calculations
         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);
 
         //Load the texture for the cube once during Surface creation
-     //   cube.loadGLTexture(gl, this.context);
+        //   cube.loadGLTexture(gl, this.context);
         cube.loadGLTexture(gl, context);
         Log.i("klop#onSurfaceCreated", "exit method");
     }
@@ -155,18 +186,18 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
     // Call back after onSurfaceCreated() or whenever the window's size changes.
     @Override
     public void onSurfaceChanged(GL10 gl, int width, int height) {
-        if(height == 0) { 						//Prevent A Divide By Zero By
-            height = 1; 						//Making Height Equal One
+        if (height == 0) {                         //Prevent A Divide By Zero By
+            height = 1;                         //Making Height Equal One
         }
 
-        gl.glViewport(0, 0, width, height); 	//Reset The Current Viewport
-        gl.glMatrixMode(GL10.GL_PROJECTION); 	//Select The Projection Matrix
-        gl.glLoadIdentity(); 					//Reset The Projection Matrix
+        gl.glViewport(0, 0, width, height);     //Reset The Current Viewport
+        gl.glMatrixMode(GL10.GL_PROJECTION);     //Select The Projection Matrix
+        gl.glLoadIdentity();                     //Reset The Projection Matrix
 
         //Calculate The Aspect Ratio Of The Window
         GLU.gluPerspective(gl, 45.0f, (float) width / (float) height, 0.1f, 100.0f);
 
-        gl.glMatrixMode(GL10.GL_MODELVIEW); 	//Select The Modelview Matrix
+        gl.glMatrixMode(GL10.GL_MODELVIEW);     //Select The Modelview Matrix
         gl.glLoadIdentity();
     }
 
@@ -180,20 +211,20 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
         gl.glLoadIdentity();                  // Reset the model-view matrix
 
         //Check if the light flag has been set to enable/disable lighting
-        if(light) {
+        if (light) {
             gl.glEnable(GL10.GL_LIGHTING);
         } else {
             gl.glDisable(GL10.GL_LIGHTING);
         }
 
         //Check if the blend flag has been set to enable/disable blending
-        if(blend) {
-            gl.glEnable(GL10.GL_BLEND);			//Turn Blending On ( NEW )
-            gl.glDisable(GL10.GL_DEPTH_TEST);	//Turn Depth Testing Off ( NEW )
+        if (blend) {
+            gl.glEnable(GL10.GL_BLEND);            //Turn Blending On ( NEW )
+            gl.glDisable(GL10.GL_DEPTH_TEST);    //Turn Depth Testing Off ( NEW )
 
         } else {
-            gl.glDisable(GL10.GL_BLEND);		//Turn Blending On ( NEW )
-            gl.glEnable(GL10.GL_DEPTH_TEST);	//Turn Depth Testing Off ( NEW )
+            gl.glDisable(GL10.GL_BLEND);        //Turn Blending On ( NEW )
+            gl.glEnable(GL10.GL_DEPTH_TEST);    //Turn Depth Testing Off ( NEW )
         }
 
         //gl.glTranslatef(0.0f, 0.0f, -6.0f);   // Translate into the screen
@@ -202,18 +233,18 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
         gl.glScalef(0.8f, 0.8f, 0.8f);
 
 
-       // gl.glRotatef(angleCube, 0.15f, 1.0f, 0.3f); // Rotate
-        gl.glRotatef(xrot, 1.0f, 0.0f, 0.0f);	//X
-        gl.glRotatef(yrot, 0.0f, 1.0f, 0.0f);	//Y
+        // gl.glRotatef(angleCube, 0.15f, 1.0f, 0.3f); // Rotate
+        gl.glRotatef(xrot, 1.0f, 0.0f, 0.0f);    //X
+        gl.glRotatef(yrot, 0.0f, 1.0f, 0.0f);    //Y
 
         cube.draw(gl, filter);
 
         // Update the rotational angle after each refresh.
-       // angleCube += speedCube;
+        // angleCube += speedCube;
 
         //Change rotation factors
-        xrot += (xspeed.floatValue()/10);
-        yrot += (yspeed.floatValue()/10);
+        xrot += (xspeed.floatValue() / 10);
+        yrot += (yspeed.floatValue() / 10);
 
     }
 
@@ -317,6 +348,7 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
         //
+
         if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
             yspeed.decrementAndGet();
 
@@ -331,10 +363,7 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
 
         } else if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
             handleSpeedEvent();
-            filter += 1;
-            if (filter > 2) {
-                filter = 0;
-            }
+            changeFilter();
         }
 
         //We handled the event
@@ -350,29 +379,45 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
         }
     }
 
-    private void handleSpeedEvent() {
-        if (isRunning.compareAndSet(false, true)) {
-             Thread t = new Thread(new Runnable() {
-                 @Override
-                 public void run() {
-                     
-                     xspeed.set(200);
-                     yspeed.set(200);
-                     
-                     while (xspeed.decrementAndGet() > 0 && yspeed.decrementAndGet() > 0){
-                         try {
-                             Thread.sleep(100L);
-                         } catch (InterruptedException e) {
-                             Thread.currentThread().interrupt();
-                         }
-                     }
-
-                     isRunning.set(false);
-
-                 }
-             });
-             t.start();
+    private synchronized void changeFilter() {
+        filter += 1;
+        if (filter > 2) {
+            filter = 0;
         }
     }
-    
+
+    private void handleSpeedEvent() {
+        if (isRunning.compareAndSet(false, true)) {
+            float vol = getVolume();
+            soundPool.play(soundId, vol, vol, 1, 0, 1f);
+            ((Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(500);
+            changeFilter();
+            final Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    float vol = getVolume();
+                    soundPool.play(soundId, vol, vol, 1, 0, 1f);
+
+                    xspeed.set(70);
+                    yspeed.set(70);
+
+                    while (xspeed.decrementAndGet() > 0 && yspeed.decrementAndGet() > 0) {
+                        try {
+                            Thread.sleep(70L);
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+
+                    isRunning.set(false);
+                    xspeed.set(0);
+                    yspeed.set(0);
+
+
+                }
+            });
+            t.start();
+        }
+    }
+
 }
