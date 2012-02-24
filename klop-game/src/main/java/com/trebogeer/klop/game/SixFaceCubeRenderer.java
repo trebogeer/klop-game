@@ -289,48 +289,50 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         //
-        float x = event.getX();
-        float y = event.getY();
+//        float x = event.getX();
+//        float y = event.getY();
+//
+//        //If a touch is moved on the screen
+//        if (event.getAction() == MotionEvent.ACTION_MOVE) {
+//            //Calculate the change
+//            float dx = x - oldX;
+//            float dy = y - oldY;
+//            //Define an upper area of 10% on the screen
+//            int upperArea = this.getHeight() / 10;
+//
+//            //Zoom in/out if the touch move has been made in the upper
+//            if (y < upperArea) {
+//                z -= dx * TOUCH_SCALE / 2;
+//
+//                //Rotate around the axis otherwise
+//            } else {
+//                xrot += dy * TOUCH_SCALE;
+//                yrot += dx * TOUCH_SCALE;
+//            }
+//
+//            //A press on the screen
+//        } else if (event.getAction() == MotionEvent.ACTION_UP) {
+//            //Define an upper area of 10% to define a lower area
+//            int upperArea = this.getHeight() / 10;
+//            int lowerArea = this.getHeight() - upperArea;
+//
+//            //
+//            if (y > lowerArea) {
+//                //Change the blend setting if the lower area left has been pressed ( NEW )
+//                if (x < (this.getWidth() / 2)) {
+//                    blend = !blend;
+//                    //Change the light setting if the lower area right has been pressed
+//                } else {
+//                    light = !light;
+//                }
+//            }
+//        }
+//
+//        //Remember the values
+//        oldX = x;
+//        oldY = y;
 
-        //If a touch is moved on the screen
-        if (event.getAction() == MotionEvent.ACTION_MOVE) {
-            //Calculate the change
-            float dx = x - oldX;
-            float dy = y - oldY;
-            //Define an upper area of 10% on the screen
-            int upperArea = this.getHeight() / 10;
-
-            //Zoom in/out if the touch move has been made in the upper
-            if (y < upperArea) {
-                z -= dx * TOUCH_SCALE / 2;
-
-                //Rotate around the axis otherwise
-            } else {
-                xrot += dy * TOUCH_SCALE;
-                yrot += dx * TOUCH_SCALE;
-            }
-
-            //A press on the screen
-        } else if (event.getAction() == MotionEvent.ACTION_UP) {
-            //Define an upper area of 10% to define a lower area
-            int upperArea = this.getHeight() / 10;
-            int lowerArea = this.getHeight() - upperArea;
-
-            //
-            if (y > lowerArea) {
-                //Change the blend setting if the lower area left has been pressed ( NEW )
-                if (x < (this.getWidth() / 2)) {
-                    blend = !blend;
-                    //Change the light setting if the lower area right has been pressed
-                } else {
-                    light = !light;
-                }
-            }
-        }
-
-        //Remember the values
-        oldX = x;
-        oldY = y;
+        handleSpeedEvent();
 
         //We handled the event
         return true;
@@ -394,6 +396,7 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
             ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(500);
             final Integer oldFilter = new Integer(filter);
             changeFilter(6);
+            blend = true;
             context.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
@@ -423,6 +426,7 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
                     xspeed.set(0);
                     yspeed.set(0);
                     changeFilter(oldFilter);
+                    blend = false;
                     context.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
