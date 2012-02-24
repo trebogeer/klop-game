@@ -1,5 +1,6 @@
 package com.trebogeer.klop.game;
 
+import android.app.Activity;
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -13,6 +14,7 @@ import android.os.Vibrator;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.widget.TextView;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
@@ -30,6 +32,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.Renderer, SensorEventListener {
 
     private IShape cube;
+
+    private TextView textView;
+
+    private String[] colors = new String[]{"BLUE", "GREEN", "RED", "PURPLE", "WHITE", "YELLOW"};
 
     private SensorManager sensorMgr;
     private long lastUpdate = -1;
@@ -83,10 +89,11 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
     /**
      * The Activity Context
      */
-    private Context context;
+    private Activity context;
 
-    public SixFaceCubeRenderer(final Context context) {
+    public SixFaceCubeRenderer(final Activity context, final TextView textView) {
         super(context);
+        this.textView = textView;
         setRenderer(this);
 
         this.setId(Integer.MAX_VALUE);
@@ -169,7 +176,7 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
         gl.glDisable(GL10.GL_DITHER);                //Disable dithering
         gl.glEnable(GL10.GL_TEXTURE_2D);            //Enable Texture Mapping
         gl.glShadeModel(GL10.GL_SMOOTH);             //Enable Smooth Shading
-        gl.glClearColor(0.0f, 0.0f, 0.0f, 0.5f);     //Black Background
+        gl.glClearColor(166 / GL10.GL_RGBA, 166 / GL10.GL_RGBA, 166 / GL10.GL_RGBA, 0.5f);     //Black Background  - 0.0f,0.0f,0.0f
         gl.glClearDepthf(1.0f);                     //Depth Buffer Setup
         gl.glEnable(GL10.GL_DEPTH_TEST);             //Enables Depth Testing
         gl.glDepthFunc(GL10.GL_LEQUAL);             //The Type Of Depth Testing To Do
@@ -313,19 +320,10 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
             if (y > lowerArea) {
                 //Change the blend setting if the lower area left has been pressed ( NEW )
                 if (x < (this.getWidth() / 2)) {
-                    if (blend) {
-                        blend = false;
-                    } else {
-                        blend = true;
-                    }
-
+                    blend = !blend;
                     //Change the light setting if the lower area right has been pressed
                 } else {
-                    if (light) {
-                        light = false;
-                    } else {
-                        light = true;
-                    }
+                    light = !light;
                 }
             }
         }
@@ -363,7 +361,6 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
 
         } else if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
             handleSpeedEvent();
-            changeFilter();
         }
 
         //We handled the event
@@ -379,25 +376,38 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
         }
     }
 
-    private synchronized void changeFilter() {
-        filter += 1;
-        if (filter > 2) {
-            filter = 0;
+    private synchronized void changeFilter(int newValue) {
+        if (newValue != 6) {
+            filter = newValue + 1;
+            if (filter > 5) {
+                filter = 0;
+            }
+        } else {
+            filter = newValue;
         }
     }
-
+                                         
     private void handleSpeedEvent() {
         if (isRunning.compareAndSet(false, true)) {
             float vol = getVolume();
             soundPool.play(soundId, vol, vol, 1, 0, 1f);
-            ((Vibrator)context.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(500);
-            changeFilter();
+            ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(500);
+            final Integer oldFilter = new Integer(filter);
+            changeFilter(6);
+            context.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    textView.setText("");
+                    textView.invalidate();
+                }
+            });
             final Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     float vol = getVolume();
                     soundPool.play(soundId, vol, vol, 1, 0, 1f);
-
+                    
+                    filter = 6;
                     xspeed.set(70);
                     yspeed.set(70);
 
@@ -412,6 +422,15 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
                     isRunning.set(false);
                     xspeed.set(0);
                     yspeed.set(0);
+                    changeFilter(oldFilter);
+                    context.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textView.setText(colors[filter]);
+                            textView.invalidate();
+                        }
+                    });
+                    ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(500);
 
 
                 }
