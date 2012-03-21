@@ -9,6 +9,7 @@ import android.os.Environment;
 import android.os.PowerManager;
 import android.os.Vibrator;
 import android.view.MotionEvent;
+import android.view.WindowManager;
 
 /**
  * @author dimav
@@ -100,6 +101,10 @@ public class SysUtils {
 
     public static Vibrator getVibrator(final Context context) {
         return ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE));
+    }
+    
+    public static WindowManager getWindowManager(final Context context) {
+        return ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE));
     }
 
 }

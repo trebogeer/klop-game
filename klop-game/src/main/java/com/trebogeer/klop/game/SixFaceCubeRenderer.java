@@ -9,6 +9,7 @@ import android.media.SoundPool;
 import android.opengl.GLSurfaceView;
 import android.os.Vibrator;
 import android.util.Log;
+import android.view.Display;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import com.trebogeer.klop.game.util.GLEUtils;
@@ -117,9 +118,11 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
 //        lightPositionBuffer = byteBuf.asFloatBuffer();
 //        lightPositionBuffer.put(lightPosition);
 //        lightPositionBuffer.position(0);
-
+        final Display display = SysUtils.getWindowManager(context).getDefaultDisplay();
+        int dw = display.getWidth();
+        int dh = display.getHeight();
         this.cube = new CubeA();
-        this.background = new Square(480, 800);
+        this.background = new Square(dw, dh);
         this.labels = new Labels();
 
         sensorMgr = SysUtils.getSensorManager(context);
