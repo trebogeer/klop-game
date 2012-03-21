@@ -1,6 +1,7 @@
 package com.trebogeer.klop.game.util;
 
 import android.graphics.Bitmap;
+import android.opengl.GLU;
 import android.opengl.GLUtils;
 
 import javax.microedition.khronos.opengles.GL10;
@@ -53,5 +54,22 @@ public final class GLEUtils {
             bitmap.recycle();
             bitmap = bitmap2;
         }
+    }
+
+    public static void onSurfaceChanged(GL10 gl, int width, int height) {
+        if (height == 0) height = 1;   // To prevent divide by zero
+        float aspect = (float) width / (float) height;
+
+        // Set the viewport (display area) to cover the entire window
+        gl.glViewport(0, 0, width, height);
+
+        // Setup perspective projection, with aspect ratio matches viewport
+        gl.glMatrixMode(GL10.GL_PROJECTION); // Select projection matrix
+        gl.glLoadIdentity();                 // Reset projection matrix
+        // Use perspective projection
+        GLU.gluPerspective(gl, 45, aspect, 0.1f, 100.f);
+
+        gl.glMatrixMode(GL10.GL_MODELVIEW);  // Select model-view matrix
+        gl.glLoadIdentity();
     }
 }

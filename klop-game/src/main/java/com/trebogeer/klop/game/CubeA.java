@@ -40,41 +40,54 @@ public class CubeA implements IShape {
      * Our texture pointer
      */
     private int[] textures = new int[7];
-
+    /**
+     * The initial indices definition
+     */
+    
+    private float r = 1.0f;
+    private byte indices[] = {
+            // Faces definition
+            0, 1, 3, 0, 3, 2,         // Face front         -1.0, -1.0, 1.0,
+            4, 5, 7, 4, 7, 6,         // Face right
+            8, 9, 11, 8, 11, 10,     // ...
+            12, 13, 15, 12, 15, 14,
+            16, 17, 19, 16, 19, 18,
+            20, 21, 23, 20, 23, 22,
+    };
     /**
      * The initial vertex definition
      */
     private float vertices[] = {
             // Vertices according to faces
-            -1.0f, -1.0f, 1.0f, //v0
-            1.0f, -1.0f, 1.0f,     //v1
-            -1.0f, 1.0f, 1.0f,     //v2
-            1.0f, 1.0f, 1.0f,     //v3
+            -r, -r, r, //v0
+            r, -r, r,     //v1
+            -r, r, r,     //v2
+            r, r, r,     //v3
 
-            1.0f, -1.0f, 1.0f,     //...
-            1.0f, -1.0f, -1.0f,
-            1.0f, 1.0f, 1.0f,
-            1.0f, 1.0f, -1.0f,
+            r, -r, r,     //...
+            r, -r, -r,
+            r, r, r,
+            r, r, -r,
 
-            1.0f, -1.0f, -1.0f,
-            -1.0f, -1.0f, -1.0f,
-            1.0f, 1.0f, -1.0f,
-            -1.0f, 1.0f, -1.0f,
+            r, -r, -r,
+            -r, -r, -r,
+            r, r, -r,
+            -r, r, -r,
 
-            -1.0f, -1.0f, -1.0f,
-            -1.0f, -1.0f, 1.0f,
-            -1.0f, 1.0f, -1.0f,
-            -1.0f, 1.0f, 1.0f,
+            -r, -r, -r,
+            -r, -r, r,
+            -r, r, -r,
+            -r, r, r,
 
-            -1.0f, -1.0f, -1.0f,
-            1.0f, -1.0f, -1.0f,
-            -1.0f, -1.0f, 1.0f,
-            1.0f, -1.0f, 1.0f,
+            -r, -r, -r,
+            r, -r, -r,
+            -r, -r, r,
+            r, -r, r,
 
-            -1.0f, 1.0f, 1.0f,
-            1.0f, 1.0f, 1.0f,
-            -1.0f, 1.0f, -1.0f,
-            1.0f, 1.0f, -1.0f,
+            -r, r, r,
+            r, r, r,
+            -r, r, -r,
+            r, r, -r,
     };
 
     /**
@@ -149,18 +162,6 @@ public class CubeA implements IShape {
             1.0f, 1.0f,
     };
 
-    /**
-     * The initial indices definition
-     */
-    private byte indices[] = {
-            // Faces definition
-            0, 1, 3, 0, 3, 2,         // Face front
-            4, 5, 7, 4, 7, 6,         // Face right
-            8, 9, 11, 8, 11, 10,     // ...
-            12, 13, 15, 12, 15, 14,
-            16, 17, 19, 16, 19, 18,
-            20, 21, 23, 20, 23, 22,
-    };
 
     /**
      * The Cube constructor.
@@ -213,7 +214,7 @@ public class CubeA implements IShape {
         gl.glEnableClientState(GL10.GL_NORMAL_ARRAY);
 
         //Set the face rotation
-        gl.glFrontFace(GL10.GL_CCW);
+     //   gl.glFrontFace(GL10.GL_CCW);
 
         //Point to our buffers
         gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertexBuffer);
@@ -244,6 +245,7 @@ public class CubeA implements IShape {
         InputStream is5 = context.getResources().openRawResource(R.drawable.white);
         InputStream is6 = context.getResources().openRawResource(R.drawable.yellow);
         InputStream is7 = context.getResources().openRawResource(R.drawable.glass);
+//        InputStream is8 = context.getResources().openRawResource(R.drawable.background02);
         Bitmap bitmap1 = null;
         Bitmap bitmap2 = null;
         Bitmap bitmap3 = null;
@@ -251,6 +253,7 @@ public class CubeA implements IShape {
         Bitmap bitmap5 = null;
         Bitmap bitmap6 = null;
         Bitmap bitmap7 = null;
+//        Bitmap bitmap8 = null;
         try {
             //BitmapFactory is an Android graphics utility for images
             bitmap1 = BitmapFactory.decodeStream(is1);
@@ -260,6 +263,7 @@ public class CubeA implements IShape {
             bitmap5 = BitmapFactory.decodeStream(is5);
             bitmap6 = BitmapFactory.decodeStream(is6);
             bitmap7 = BitmapFactory.decodeStream(is7);
+  //          bitmap8 = BitmapFactory.decodeStream(is8);
 
         } finally {
             //Always clear and close
@@ -276,6 +280,8 @@ public class CubeA implements IShape {
                 is5 = null;
                 is6.close();
                 is6 = null;
+                is7.close();
+                is7 = null;
             } catch (IOException e) {
             }
         }
@@ -309,9 +315,6 @@ public class CubeA implements IShape {
         gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
         GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap7, 0);
 
-
-
-
         //Create Linear Filtered Texture and bind it to texture 1
         gl.glBindTexture(GL10.GL_TEXTURE_2D, textures[1]);
         gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
@@ -323,26 +326,25 @@ public class CubeA implements IShape {
         gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
         gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_NEAREST);
         GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap3, 0);
-        /*
-           * This is a change to the original tutorial, as buildMipMap does not exist anymore
-           * in the Android SDK.
-           *
-           * We check if the GL context is version 1.1 and generate MipMaps by flag.
-           * Otherwise we call our own buildMipMap implementation
-           */
-//        if (gl instanceof GL11) {
-//            gl.glTexParameterf(GL11.GL_TEXTURE_2D, GL11.GL_GENERATE_MIPMAP, GL11.GL_TRUE);
-//            GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap3, 0);
-//
-//            //
-//        } else {
-//            GLEUtils.buildMipmap(gl, bitmap3);
-//        }
+
+        // Background
+
+//        gl.glBindTexture(GL10.GL_TEXTURE_2D, textures[7]);
+//        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MAG_FILTER, GL10.GL_NEAREST);
+//        gl.glTexParameterf(GL10.GL_TEXTURE_2D, GL10.GL_TEXTURE_MIN_FILTER, GL10.GL_LINEAR);
+//        GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bitmap8, 0);
+
 
         //Clean up
         bitmap1.recycle();
         bitmap2.recycle();
         bitmap3.recycle();
+        bitmap4.recycle();
+        bitmap5.recycle();
+        bitmap6.recycle();
+        bitmap7.recycle();
+//        bitmap8.recycle();
+
     }
 
 }

@@ -1,19 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.trebogeer.klop.game" android:versionCode="1" android:versionName="1.0">
+          package="com.trebogeer.klop.game" android:versionCode="1" android:versionName="1.0"
+          android:installLocation="preferExternal">
 
-    <application android:icon="@drawable/frog" android:label="@string/app_name">
-        <activity android:name=".Game" android:screenOrientation="portrait">
+    <application android:icon="@drawable/frog" android:label="@string/app_name"
+                 android:debuggable="true">
+        <activity android:name=".Game" android:screenOrientation="portrait"
+                  android:configChanges="keyboard|keyboardHidden|orientation">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
         <!--<activity android:name=".GameAnimalImages" android:label="@string/app_name"/>-->
-        <!--<activity android:name=".NiceCubeGL" android:label="@string/app_name"/>-->
     </application>
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-sdk android:minSdkVersion="10"/>
+
+
+    <uses-feature android:name="android.hardware.touchscreen.multitouch"
+                  android:required="true"/>
 
 </manifest>
 
