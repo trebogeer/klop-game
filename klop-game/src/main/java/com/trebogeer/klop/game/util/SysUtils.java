@@ -7,6 +7,7 @@ import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Environment;
 import android.os.PowerManager;
+import android.os.Vibrator;
 import android.view.MotionEvent;
 
 /**
@@ -18,15 +19,13 @@ public class SysUtils {
 
     private static SoundPool soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
 
-    //private static AssetManager assetManager =
-
-    public static boolean hasAccelerometer(final Context context, final SensorManager manager) {
+    public static boolean hasAccelerometer(final SensorManager manager) {
         return manager.getSensorList(Sensor.TYPE_ACCELEROMETER).size() > 0;
     }
 
     public static boolean hasAccelerometer(final Context context) {
-        SensorManager manager = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
-        return manager.getSensorList(Sensor.TYPE_ACCELEROMETER).size() > 0;
+        SensorManager manager = getSensorManager(context);
+        return hasAccelerometer(manager);
     }
 
     public static int pointerIndex(final MotionEvent event) {
@@ -59,6 +58,21 @@ public class SysUtils {
         return soundPool.load(sound, 1);
     }
 
+    public static int addSound(final String sound, final SoundPool.OnLoadCompleteListener listener) {
+        soundPool.setOnLoadCompleteListener(listener);
+        return addSound(sound);
+    }
+
+    public static int addAndPlay(final Context context, final int resId) {
+        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
+                playSoundMid(sampleId);
+            }
+        });
+        return soundPool.load(context, resId, 1);
+    }
+
     public static void playSoundLoud(final int soundId) {
         soundPool.play(soundId, 1.0f, 1.0f, 0, 0, 1);
     }
@@ -82,6 +96,10 @@ public class SysUtils {
 
     public static SensorManager getSensorManager(final Context context) {
         return (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+    }
+
+    public static Vibrator getVibrator(final Context context) {
+        return ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE));
     }
 
 }

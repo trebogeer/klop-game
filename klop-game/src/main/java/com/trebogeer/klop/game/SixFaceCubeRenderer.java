@@ -1,12 +1,10 @@
 package com.trebogeer.klop.game;
 
 import android.app.Activity;
-import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.media.AudioManager;
 import android.media.SoundPool;
 import android.opengl.GLSurfaceView;
 import android.os.Vibrator;
@@ -34,6 +32,7 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
 
 
     private SensorManager sensorMgr;
+    private Vibrator vibrator;
     private long lastUpdate = -1;
     private float x, y, zz;
     private float last_x, last_y, last_z;
@@ -130,30 +129,10 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
             sensorMgr.unregisterListener(this);
         }
 
-        soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
-        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-            @Override
-            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
-                float volume = getVolume();
-                // Is the sound loaded already?
-                // if (loaded) {
-                soundPool.play(sampleId, volume, volume, 1, 0, 1f);
-                //  Log.e("Test", "Played sound");
-                //}
-            }
-        });
-        this.soundId = soundPool.load(context, R.raw.soft_airy_swish, 1);
+        this.soundId = SysUtils.addAndPlay(context, R.raw.soft_airy_swish);
+        vibrator = SysUtils.getVibrator(context);
 
 
-    }
-
-    private float getVolume() {
-        AudioManager audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        float actualVolume = (float) audioManager
-                .getStreamVolume(AudioManager.STREAM_MUSIC);
-        float maxVolume = (float) audioManager
-                .getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-        return actualVolume / maxVolume;
     }
 
     // Call back when the surface is first created or re-created.
@@ -335,18 +314,15 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
                                          
     private void handleSpeedEvent() {
         if (isRunning.compareAndSet(false, true)) {
-            float vol = getVolume();
-            soundPool.play(soundId, vol, vol, 1, 0, 1f);
-            ((Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE)).vibrate(500);
+            SysUtils.playSoundMid(soundId);
+            vibrator.vibrate(500);
             final Integer oldFilter = new Integer(filter);
             changeFilter(6);
             blend = true;
             final Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                   float vol = getVolume();
-                   soundPool.play(soundId, vol, vol, 1, 0, 1f);
-                    
+                   SysUtils.playSoundMid(soundId);
                     filter = 6;
                     xspeed.set(120);
                     yspeed.set(120);
