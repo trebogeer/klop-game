@@ -17,6 +17,8 @@ import com.trebogeer.klop.game.util.SysUtils;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -65,10 +67,7 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
 
     private SoundPool soundPool;
 
-    /* The initial light values */
-    private float[] lightAmbient = {0.5f, 0.5f, 0.5f, 1.0f};
-    private float[] lightDiffuse = {1.0f, 1.0f, 1.0f, 1.0f};
-    private float[] lightPosition = {0.0f, 0.0f, 2.0f, 1.0f};
+
 
     /* The buffers for our light values */
     private FloatBuffer lightAmbientBuffer;
@@ -99,25 +98,30 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
 
         //
         this.context = context;
-
+        /* The initial light values */
+        float[] lightAmbient = {0.5f, 0.5f, 0.5f, 1.0f};
+        float[] lightDiffuse = {1.0f, 1.0f, 1.0f, 1.0f};
+        float[] lightPosition = {0.0f, 0.0f, 2.0f, 1.0f};
         //
-//        ByteBuffer byteBuf = ByteBuffer.allocateDirect(lightAmbient.length * 4);
-//        byteBuf.order(ByteOrder.nativeOrder());
-//        lightAmbientBuffer = byteBuf.asFloatBuffer();
-//        lightAmbientBuffer.put(lightAmbient);
-//        lightAmbientBuffer.position(0);
-//
-//        byteBuf = ByteBuffer.allocateDirect(lightDiffuse.length * 4);
-//        byteBuf.order(ByteOrder.nativeOrder());
-//        lightDiffuseBuffer = byteBuf.asFloatBuffer();
-//        lightDiffuseBuffer.put(lightDiffuse);
-//        lightDiffuseBuffer.position(0);
-//
-//        byteBuf = ByteBuffer.allocateDirect(lightPosition.length * 4);
-//        byteBuf.order(ByteOrder.nativeOrder());
-//        lightPositionBuffer = byteBuf.asFloatBuffer();
-//        lightPositionBuffer.put(lightPosition);
-//        lightPositionBuffer.position(0);
+        ByteBuffer byteBuf = ByteBuffer.allocateDirect(lightAmbient.length * 4);
+        byteBuf.order(ByteOrder.nativeOrder());
+        lightAmbientBuffer = byteBuf.asFloatBuffer();
+        lightAmbientBuffer.put(lightAmbient);
+        lightAmbientBuffer.position(0);
+
+        byteBuf = ByteBuffer.allocateDirect(lightDiffuse.length * 4);
+        byteBuf.order(ByteOrder.nativeOrder());
+        lightDiffuseBuffer = byteBuf.asFloatBuffer();
+        lightDiffuseBuffer.put(lightDiffuse);
+        lightDiffuseBuffer.position(0);
+
+        byteBuf = ByteBuffer.allocateDirect(lightPosition.length * 4);
+        byteBuf.order(ByteOrder.nativeOrder());
+        lightPositionBuffer = byteBuf.asFloatBuffer();
+        lightPositionBuffer.put(lightPosition);
+        lightPositionBuffer.position(0);
+
+
         final Display display = SysUtils.getWindowManager(context).getDefaultDisplay();
         int dw = display.getWidth();
         int dh = display.getHeight();
@@ -142,14 +146,13 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
     @Override
     public void onSurfaceCreated(GL10 gl, EGLConfig config) {
         Log.i("klop#onSurfaceCreated", "Enterd method");
-        cube.loadGLTexture(gl, context);
-        background.loadGLTexture(gl, context);
-        labels.loadGLTexture(gl, context);
+
         //And there'll be light!
-//        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_AMBIENT, lightAmbientBuffer);        //Setup The Ambient Light
-//        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, lightDiffuseBuffer);        //Setup The Diffuse Light
-//        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, lightPositionBuffer);    //Position The Light
-//        gl.glEnable(GL10.GL_LIGHT0);                                            //Enable Light 0
+        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_AMBIENT, lightAmbientBuffer);        //Setup The Ambient Light
+        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_DIFFUSE, lightDiffuseBuffer);        //Setup The Diffuse Light
+        gl.glLightfv(GL10.GL_LIGHT0, GL10.GL_POSITION, lightPositionBuffer);    //Position The Light
+        gl.glEnable(GL10.GL_LIGHT0);                                            //Enable Light 0
+        gl.glEnable(GL10.GL_LIGHT1);
 //
 //        //Blending
 //        gl.glColor4f(1.0f, 1.0f, 1.0f, 0.5f);                //Full Brightness. 50% Alpha ( NEW )
@@ -167,6 +170,10 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
 
         //Really Nice Perspective Calculations
         gl.glHint(GL10.GL_PERSPECTIVE_CORRECTION_HINT, GL10.GL_NICEST);
+
+        cube.loadGLTexture(gl, context);
+        background.loadGLTexture(gl, context);
+        labels.loadGLTexture(gl, context);
 
         Log.i("klop#onSurfaceCreated", "exit method");
     }
@@ -186,12 +193,12 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
         // ----- Render the Cube -----
         gl.glLoadIdentity();                  // Reset the model-view matrix
 
-//    //    Check if the light flag has been set to enable/disable lighting
-//        if (light) {
-//            gl.glEnable(GL10.GL_LIGHTING);
-//        } else {
-//            gl.glDisable(GL10.GL_LIGHTING);
-//        }
+    //    Check if the light flag has been set to enable/disable lighting
+      //  if (light) {
+            gl.glEnable(GL10.GL_LIGHTING);
+     //   } else {
+      //      gl.glDisable(GL10.GL_LIGHTING);
+     //   }
 //
 //        //Check if the blend flag has been set to enable/disable blending
 //        if (blend) {
@@ -219,8 +226,8 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
         yrot += (yspeed.floatValue() / 10);
 
      //   gl.glTranslatef(-3.0f, 0.0f, -3.0f);
-       if(!isRunning.get())
-        labels.draw(gl, filter);
+        if (!isRunning.get())
+            labels.draw(gl, filter);
 
     }
 
@@ -325,7 +332,7 @@ public class SixFaceCubeRenderer extends GLSurfaceView implements GLSurfaceView.
             final Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                   SysUtils.playSoundMid(soundId);
+                    SysUtils.playSoundMid(soundId);
                     filter = 6;
                     xspeed.set(120);
                     yspeed.set(120);
